@@ -1,4 +1,9 @@
 <?php
+/**
+ * @link https://github.com/tigrov/yii2-upload-behavior
+ * @author Sergei Tigrov <rrr-r@ya.ru>
+ */
+
 namespace tigrov\uploadBehavior;
 
 use yii\db\BaseActiveRecord;
