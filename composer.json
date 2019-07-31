@@ -1,0 +1,30 @@
+{
+    "name": "tigrov/yii2-upload-behavior",
+    "description": "File upload behavior for Yii2 ActiveRecord models",
+    "keywords": ["yii2", "extension", "upload", "behavior", "file"],
+    "type": "yii2-extension",
+    "license": "MIT",
+    "support": {
+        "source": "https://github.com/tigrov/yii2-upload-behavior"
+    },
+    "authors": [
+        {
+            "name": "Sergei Tigrov",
+            "email": "rrr-r@ya.ru"
+        }
+    ],
+    "require": {
+        "yiisoft/yii2": "~2.0.0"
+    },
+    "repositories": [
+        {
+            "type": "composer",
+            "url": "https://asset-packagist.org"
+        }
+    ],
+    "autoload": {
+        "psr-4": {
+            "tigrov\\uploadBehavior\\": ""
+        }
+    }
+}
