@@ -62,6 +62,8 @@ class Model extends \yii\db\ActiveRecord
 
 Create an action in a controller
 ```php
+class FormController extends \yii\web\Controller
+{
     public function actionUpload()
     {
         $model = new Model();
@@ -74,6 +76,7 @@ Create an action in a controller
             'model' => $model,
         ]);
     }
+}
 ```
 
 Create a form with the file attribute
