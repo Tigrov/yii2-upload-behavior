@@ -1,9 +1,4 @@
 <?php
-/**
- * @link https://github.com/tigrov/yii2-upload-behavior
- * @author Sergei Tigrov <rrr-r@ya.ru>
- */
-
 namespace tigrov\uploadBehavior;
 
 use yii\db\BaseActiveRecord;
@@ -67,9 +62,11 @@ class UploadBehavior extends \yii\base\Behavior
      */
     public $saveCallback;
 
-    private $files;
+    private $files = [];
 
-    private $oldFiles;
+    private $savedFiles = [];
+
+    private $oldFiles = [];
 
     /**
      * @inheritdoc
@@ -92,8 +89,9 @@ class UploadBehavior extends \yii\base\Behavior
             BaseActiveRecord::EVENT_BEFORE_INSERT => 'beforeSave',
             BaseActiveRecord::EVENT_BEFORE_UPDATE => 'beforeSave',
             BaseActiveRecord::EVENT_BEFORE_DELETE => 'beforeDelete',
-            BaseActiveRecord::EVENT_AFTER_UPDATE => 'afterUpdate',
-            BaseActiveRecord::EVENT_AFTER_DELETE => 'afterUpdate',
+            BaseActiveRecord::EVENT_AFTER_INSERT => 'afterSave',
+            BaseActiveRecord::EVENT_AFTER_UPDATE => 'afterSave',
+            BaseActiveRecord::EVENT_AFTER_DELETE => 'afterDelete',
         ];
 
         return $event;
@@ -160,6 +158,10 @@ class UploadBehavior extends \yii\base\Behavior
                 } else {
                     $result = $file->saveAs($fullpath);
                 }
+
+                $this->savedFiles[$attribute] = $result;
+            } else {
+                $this->owner->$attribute = $this->owner->getOldAttribute($attribute);
             }
         }
 
@@ -169,8 +171,8 @@ class UploadBehavior extends \yii\base\Behavior
     public function removeOldFiles()
     {
         foreach ($this->attributes as $attribute) {
-            if (!empty($this->oldFiles[$attribute])) {
-                if ($this->owner->getAttribute($attribute) != $this->oldFiles[$attribute]) {
+            if (!empty($this->savedFiles[$attribute]) && !empty($this->oldFiles[$attribute])) {
+                if ($this->owner->$attribute != $this->oldFiles[$attribute]) {
                     @unlink($this->oldFiles[$attribute]);
                 }
             }
@@ -191,7 +193,12 @@ class UploadBehavior extends \yii\base\Behavior
     public function beforeValidate($event)
     {
         foreach ($this->attributes as $attribute) {
-            $this->owner->$attribute = $this->getUploadedFile($attribute);
+            $uploadedFile = $this->getUploadedFile($attribute);
+            if ($uploadedFile !== null) {
+                $this->owner->$attribute = $uploadedFile;
+            } else {
+                $this->owner->$attribute = $this->owner->getOldAttribute($attribute);
+            }
         }
     }
 
@@ -210,6 +217,17 @@ class UploadBehavior extends \yii\base\Behavior
     }
 
     /**
+     * Event handler for beforeSave
+     * @param yii\base\ModelEvent $event
+     */
+    public function afterSave($event)
+    {
+        if ($event->name == BaseActiveRecord::EVENT_AFTER_UPDATE && $this->removeOld) {
+            $this->removeOldFiles();
+        }
+    }
+
+    /**
      * Event handler for beforeDelete
      * @param yii\base\ModelEvent $event
      */
@@ -220,7 +238,7 @@ class UploadBehavior extends \yii\base\Behavior
         }
     }
 
-    public function afterUpdate($event)
+    public function afterDelete($event)
     {
         if ($this->removeOld) {
             $this->removeOldFiles();
